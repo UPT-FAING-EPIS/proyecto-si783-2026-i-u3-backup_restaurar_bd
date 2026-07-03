@@ -1,230 +1,134 @@
 <center>
 
-[comment]: <img src="./media/media/image1.png" style="width:1.088in;height:1.46256in" alt="escudo.png" />
-
-![./media/media/image1.png](./media/logo-upt.png)
+![./media/logo-upt.png](./media/logo-upt.png)
 
 **UNIVERSIDAD PRIVADA DE TACNA**
 
-**FACULTAD DE INGENIERIA**
+**FACULTAD DE INGENIERÍA**
 
 **Escuela Profesional de Ingeniería de Sistemas**
 
-**Proyecto *{Nombre de Proyecto}***
+**Proyecto: *SafeBridge: Ecosistema Multi-Motor de Respaldos y Validación de Integridad***
 
-Curso: *{Nombre de Asignatura}*
+Curso: *Base de Datos II*
 
-Docente: *{Nombre de Docente}*
+Docente: *Ing. Patrick José Cuadros Quiroga*
 
 Integrantes:
 
-***{Apellidos y nombres del estudiante (código universitario)}***
+***Sierra Ruiz, Iker Alberto (2023077090)***
+
+***Cortez Mamani, Julio Samuel (2023077283)***
+
+**Empresa / Equipo: BitCraft Solutions**
 
 **Tacna – Perú**
 
-***{Año}***
+***2026***
 
-**  
-**
 </center>
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+<div style="page-break-after: always; visibility: hidden"></div>
 
+**Sistema: *SafeBridge: Ecosistema Multi-Motor de Respaldos y Validación de Integridad***
 
+**Informe FD02 — Roadmap, Características y Gestión del Producto**
 
+**Versión *3.0***
 
+| CONTROL DE VERSIONES | | | | | |
+|:---:|---|---|---|---|---|
+| Versión | Hecha por | Revisada por | Aprobada por | Fecha | Motivo |
+| 2.0 | IASR / JSCM | Ing. P. Cuadros | Ing. P. Cuadros | 31/05/2026 | Actualización de Características (Tauri) |
+| 3.0 | IASR / JSCM | Ing. P. Cuadros | Ing. P. Cuadros | 03/07/2026 | Evolución a Ecosistema DevOps (Telegram, GitHub, VSCode) |
 
+<div style="page-break-after: always; visibility: hidden"></div>
 
+---
 
+# ÍNDICE GENERAL
 
+1. [Descripción General del Producto](#1-descripción-general-del-producto)
+2. [Características Actuales del Producto (Ecosistema)](#2-características-actuales-del-producto-ecosistema)
+   - [2.1 SafeBridge Telegram API (FastAPI)](#21-safebridge-telegram-api-fastapi)
+   - [2.2 SafeBridge Action (GitHub)](#22-safebridge-action-github)
+   - [2.3 SafeBridge VS Code Extension](#23-safebridge-vs-code-extension)
+3. [Roadmap y Futuras Versiones](#3-roadmap-y-futuras-versiones)
+4. [Gestión de Tareas con GitHub Projects y Ramas](#4-gestión-de-tareas-con-github-projects-y-ramas)
+5. [Conclusiones](#5-conclusiones)
 
+<div style="page-break-after: always; visibility: hidden"></div>
 
+---
 
+## 1. Descripción General del Producto
 
-**Sistema *{Nombre del Sistema}***
+**SafeBridge** ha evolucionado de ser una aplicación local (Desktop) a un ecosistema DevOps completo diseñado para garantizar la integridad de respaldos de bases de datos en cualquier punto del ciclo de vida del software.
 
-**Documento de Visión**
+El producto ahora se divide en tres componentes clave, cada uno atacando un problema específico del desarrollador: la necesidad de solicitar respaldos de forma remota, la necesidad de verificar backups durante la integración continua, y la necesidad de validar archivos grandes localmente sin salir del editor de código.
 
-**Versión *{1.0}***
-**
+<div style="page-break-after: always; visibility: hidden"></div>
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+## 2. Características Actuales del Producto (Ecosistema)
 
+### 2.1 SafeBridge Telegram API (FastAPI)
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+Un microservicio central escrito en **Python (FastAPI)** bajo principios de Clean Architecture.
+- **Orquestación Asíncrona:** Ejecuta `mysqldump`, `pg_dump`, `sqlcmd` o `mongodump` usando el Patrón Estrategia (`Strategy Pattern`).
+- **Bot de Telegram:** Los usuarios autenticados pueden interactuar con un bot de Telegram, solicitar volcados, y recibir el archivo resultante (.sql o .bak) directamente en el chat junto con un reporte de logs generados en el servidor.
+- **Despliegue Contenerizado:** Emplea Docker Compose para levantar en paralelo la API interna y el worker del Bot de Telegram en un VPS.
 
+### 2.2 SafeBridge Action (GitHub)
 
-**INDICE GENERAL**
-#
-[1.	Introducción](#_Toc52661346)
+Una **Custom GitHub Action** que automatiza la validación de integridad.
+- **Detección Automática:** Encuentra archivos `.sql`, `.bak`, `.bson` en los commits y ramas empujadas.
+- **Validación Binaria:** Para SQL Server (.bak), levanta inteligentemente un contenedor Docker efímero con SQL Server 2022 y ejecuta `RESTORE VERIFYONLY` para validación profunda, apagándolo y destruyéndolo tras confirmar el estado.
+- **Validación Rápida:** Para PostgreSQL y MySQL, revisa firmas como `Dump completed on` en milisegundos.
 
-1.1	Propósito
+### 2.3 SafeBridge VS Code Extension
 
-1.2	Alcance
+Extensión para el IDE más popular del mundo, desarrollada en **TypeScript y Node.js**.
+- **Comandos Integrados:** Mediante `Ctrl + Shift + P` -> `SafeBridge: Verificar integridad de Backup`.
+- **Análisis Local Inteligente:** Provee al desarrollador retroalimentación inmediata (OK / Corrupto) de un backup descargado o generado, sin depender de subidas a la nube ni scripts adicionales.
 
-1.3	Definiciones, Siglas y Abreviaturas
+<div style="page-break-after: always; visibility: hidden"></div>
 
-1.4	Referencias
+---
 
-1.5	Visión General
+## 3. Roadmap y Futuras Versiones
 
-[2.	Posicionamiento](#_Toc52661347)
+| Versión | Release Date (estimado) | Estado | Características Principales |
+|:-------:|:----------------------:|:------:|------------------------------|
+| **v2.0** | Mayo 2026 | ✅ Liberada | Versión Tauri MVP (Descontinuada a favor del ecosistema distribuido). |
+| **v3.0** | Julio 2026 | ✅ Liberada | Ecosistema DevOps: API FastAPI, Bot de Telegram conversacional, GitHub Action de verificación CI/CD, VS Code Extension. |
+| **v3.5** | Octubre 2026 | 📋 Planificada | Integrar envío automático de los respaldos orquestados por el Telegram Bot hacia AWS S3 de forma nativa (Boto3). |
 
-2.1	Oportunidad de negocio
+<div style="page-break-after: always; visibility: hidden"></div>
 
-2.2	Definición del problema
+---
 
-[3.	Descripción de los interesados y usuarios](#_Toc52661348)
+## 4. Gestión de Tareas con GitHub Projects y Ramas
 
-3.1	Resumen de los interesados
+Con la transición a ecosistema, ahora manejamos un repositorio Monorepo o múltiples repositorios conectados (`safebridge-telegram`, `safebridge-action`, `safebridge-vscode`).
 
-3.2	Resumen de los usuarios
+**Estrategia de Ramas:**
+- `main`: Código estable para producción.
+- `feat/bot-webhook`: Tareas para el Bot de Telegram.
+- `feat/action-docker`: Tareas para la GitHub Action.
+- `bugfix/vscode-regex`: Reparación de la extensión.
 
-3.3	Entorno de usuario
+Los PRs (Pull Requests) exigen revisión y validación mediante las mismas GitHub Actions generadas por el equipo para hacer "dogfooding" (probar la herramienta en los propios respaldos de la herramienta).
 
-3.4	Perfiles de los interesados
+<div style="page-break-after: always; visibility: hidden"></div>
 
-3.5	Perfiles de los Usuarios
+---
 
-3.6	Necesidades de los interesados y usuarios
+## 5. Conclusiones
 
-[4.	Vista General del Producto](#_Toc52661349)
+La transformación de un producto monolítico a un **Ecosistema Modular (Microservicios + Extensiones)** asegura que SafeBridge se alinee con las demandas modernas de las empresas tecnológicas: integración en los IDEs (VS Code), validación continua (GitHub Actions), y gestión remota notificada (Telegram + FastAPI). 
 
-4.1	Perspectiva del producto
+---
 
-4.2	Resumen de capacidades
-
-4.3	Suposiciones y dependencias
-
-4.4	Costos y precios
-
-4.5	Licenciamiento e instalación
-
-[5.	Características del producto](#_Toc52661350)
-
-[6.	Restricciones](#_Toc52661351)
-
-[7.	Rangos de calidad](#_Toc52661352)
-
-[8.	Precedencia y Prioridad](#_Toc52661353)
-
-[9.	Otros requerimientos del producto](#_Toc52661354)
-
-b) Estandares legales
-
-c) Estandares de comunicación	](#_toc394513800)37
-
-d) Estandaraes de cumplimiento de la plataforma	](#_toc394513800)42
-
-e) Estandaraes de calidad y seguridad	](#_toc394513800)42
-
-[CONCLUSIONES](#_Toc52661355)
-
-[RECOMENDACIONES](#_Toc52661356)
-
-[BIBLIOGRAFIA](#_Toc52661357)
-
-[WEBGRAFIA](#_Toc52661358)
-
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-**<u>Informe de Visión</u>**
-
-1. <span id="_Toc52661346" class="anchor"></span>**Introducción**
-
-    1.1	Propósito
-
-    1.2	Alcance
-
-    1.3	Definiciones, Siglas y Abreviaturas
-
-    1.4	Referencias
-
-    1.5	Visión General
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-2. <span id="_Toc52661347" class="anchor"></span>**Posicionamiento**
-
-    2.1	Oportunidad de negocio
-
-    2.2	Definición del problema
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-3. <span id="_Toc52661348" class="anchor"></span>**Vista General del Producto**
-
-    3.1	Resumen de los interesados
-
-    3.2	Resumen de los usuarios
-
-    3.3	Entorno de usuario
-
-    3.4	Perfiles de los interesados
-
-    3.5	Perfiles de los Usuarios
-
-    3.6	Necesidades de los interesados y usuarios
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-4. <span id="_Toc52661349" class="anchor"></span>**Estudio de
-    Factibilidad**
-
-    4.1	Perspectiva del producto
-
-    4.2	Resumen de capacidades
-
-    4.3	Suposiciones y dependencias
-
-    4.4	Costos y precios
-
-    4.5	Licenciamiento e instalación
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-5. <span id="_Toc52661350" class="anchor"></span>**Características del producto**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-6. <span id="_Toc52661351" class="anchor"></span>**Restricciones**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-7. <span id="_Toc52661352" class="anchor"></span>**Rangos de Calidad**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-8. <span id="_Toc52661353" class="anchor"></span>**Precedencia y Prioridad**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-9. <span id="_Toc52661354" class="anchor"></span>**Otros requerimientos del producto**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-<span id="_Toc52661355" class="anchor"></span>**CONCLUSIONES**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-<span id="_Toc52661356" class="anchor"></span>**RECOMENDACIONES**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-<span id="_Toc52661357" class="anchor"></span>**BIBLIOGRAFIA**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-<span id="_Toc52661358" class="anchor"></span>**WEBGRAFIA**
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+*Documento generado por el equipo BitCraft Solutions — Universidad Privada de Tacna, 2026.*

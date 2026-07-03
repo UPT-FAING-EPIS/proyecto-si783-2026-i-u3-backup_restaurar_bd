@@ -1,230 +1,195 @@
 <center>
 
-[comment]: <img src="./media/media/image1.png" style="width:1.088in;height:1.46256in" alt="escudo.png" />
-
-![./media/media/image1.png](./media/logo-upt.png)
+![./media/logo-upt.png](./media/logo-upt.png)
 
 **UNIVERSIDAD PRIVADA DE TACNA**
 
-**FACULTAD DE INGENIERIA**
+**FACULTAD DE INGENIERÍA**
 
 **Escuela Profesional de Ingeniería de Sistemas**
 
-**Proyecto *{Nombre de Proyecto}***
+**Proyecto: *SafeBridge: Ecosistema Multi-Motor de Respaldos y Validación de Integridad***
 
-Curso: *{Nombre de Asignatura}*
+Curso: *Base de Datos II*
 
-Docente: *{Nombre de Docente}*
+Docente: *Ing. Patrick José Cuadros Quiroga*
 
 Integrantes:
 
-***{Apellidos y nombres del estudiante (código universitario)}***
+***Sierra Ruiz, Iker Alberto (2023077090)***
+
+***Cortez Mamani, Julio Samuel (2023077283)***
 
 **Tacna – Perú**
 
-***{Año}***
+***2026***
 
-**  
-**
 </center>
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
 
-Sistema *{Nombre del Sistema}*
+<div style="page-break-after: always; visibility: hidden"></div>
 
-Informe de Factibilidad
+**Sistema: *SafeBridge: Ecosistema Multi-Motor de Respaldos y Validación de Integridad***
 
-Versión *{1.0}*
+**Informe de Factibilidad**
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+**Versión *3.0***
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+| CONTROL DE VERSIONES | | | | | |
+|:---:|---|---|---|---|---|
+| Versión | Hecha por | Revisada por | Aprobada por | Fecha | Motivo |
+| 1.0 | IASR / JSCM | Ing. P. Cuadros | Ing. P. Cuadros | 27/03/2026 | Versión Original |
+| 2.0 | IASR / JSCM | Ing. P. Cuadros | Ing. P. Cuadros | 31/05/2026 | Actualización Arquitectura a Tauri/Rust |
+| 3.0 | IASR / JSCM | Ing. P. Cuadros | Ing. P. Cuadros | 03/07/2026 | Evolución a Ecosistema (Telegram, VSCode, GH Action) |
 
-# **INDICE GENERAL**
+<div style="page-break-after: always; visibility: hidden"></div>
 
-[1. Descripción del Proyecto](#_Toc52661346)
+---
 
-[2. Riesgos](#_Toc52661347)
+# ÍNDICE GENERAL
 
-[3. Análisis de la Situación actual](#_Toc52661348)
+1. [Descripción del Proyecto](#1-descripción-del-proyecto)
+2. [Riesgos](#2-riesgos)
+3. [Análisis de la Situación Actual](#3-análisis-de-la-situación-actual)
+4. [Estudio de Factibilidad](#4-estudio-de-factibilidad)
+   - [4.1 Factibilidad Técnica](#41-factibilidad-técnica)
+   - [4.2 Factibilidad Económica](#42-factibilidad-económica)
+   - [4.3 Factibilidad Operativa](#43-factibilidad-operativa)
+   - [4.4 Factibilidad Legal](#44-factibilidad-legal)
+   - [4.5 Factibilidad Social y Ambiental](#45-factibilidad-social-y-ambiental)
+5. [Análisis Financiero](#5-análisis-financiero)
+6. [Conclusiones](#6-conclusiones)
 
-[4. Estudio de Factibilidad](#_Toc52661349)
+<div style="page-break-after: always; visibility: hidden"></div>
 
-[4.1 Factibilidad Técnica](#_Toc52661350)
+---
 
-[4.2 Factibilidad económica](#_Toc52661351)
+## 1. Descripción del Proyecto
 
-[4.3 Factibilidad Operativa](#_Toc52661352)
+### 1.1 Nombre del proyecto
 
-[4.4 Factibilidad Legal](#_Toc52661353)
+**SafeBridge: Ecosistema Multi-Motor de Respaldos y Validación de Integridad**
 
-[4.5 Factibilidad Social](#_Toc52661354)
+### 1.2 Duración del proyecto
 
-[4.6 Factibilidad Ambiental](#_Toc52661355)
+Cuatro (4) meses, equivalentes a un ciclo académico universitario (marzo – julio 2026). El análisis de factibilidad económica se proyecta a un horizonte de un (1) año con el fin de evaluar el retorno de la inversión.
 
-[5. Análisis Financiero](#_Toc52661356)
+### 1.3 Descripción
 
-[6. Conclusiones](#_Toc52661357)
+En la actualidad, la pérdida de datos representa uno de los principales riesgos operativos para los desarrolladores. Disponer de un archivo de respaldo no garantiza por sí solo que dicho respaldo sea utilizable en una emergencia. 
 
+Ante esta problemática, surge la evolución de **SafeBridge**, pasando de ser una aplicación monolítica de escritorio a un ecosistema de herramientas desacopladas orientadas a desarrolladores individuales, DevSecOps y pequeñas empresas. El ecosistema consta de:
+- **(i) SafeBridge Telegram API (FastAPI/Python):** Un microservicio core diseñado bajo Clean Architecture que ejecuta operaciones de orquestación y respaldo empleando el Patrón Estrategia para `pg_dump`, `mysqldump`, `sqlcmd` y `mongodump`. Se comunica con el usuario a través de un Bot de Telegram.
+- **(ii) SafeBridge Action:** Una Custom GitHub Action que verifica automáticamente la integridad de los volcados (.sql, .bak, .bson, .archive) en entornos de integración continua (CI/CD).
+- **(iii) SafeBridge VS Code Extension:** Una extensión nativa construida en TypeScript/Node.js que permite validar backups locales en milisegundos usando validación EOF.
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 1.4 Objetivos
 
-**<u>Informe de Factibilidad</u>**
+#### 1.4.1 Objetivo General
 
-1. <span id="_Toc52661346" class="anchor"></span>**Descripción del Proyecto**
+Desarrollar un ecosistema de software modular y multiplataforma que automatice la generación de respaldos y la validación de integridad para múltiples motores de bases de datos, integrándose en las herramientas diarias del desarrollador (Telegram, GitHub y VS Code).
 
-    1.1. Nombre del proyecto
+#### 1.4.2 Objetivos Específicos
 
-    1.2. Duración del proyecto
+- Desacoplar la lógica monolítica previa creando una API REST en Python (FastAPI) para orquestación de bases de datos.
+- Implementar un bot de Telegram como interfaz conversacional principal para desencadenar respaldos y recibir los archivos de forma asíncrona.
+- Desarrollar una extensión nativa para VS Code que valide la integridad de archivos (EOF y peso) directamente en el editor.
+- Integrar la validación inteligente en flujos CI/CD mediante una GitHub Action que levante contenedores efímeros (ej. SQL Server) cuando se requiera validación profunda.
+- Desplegar el backend (FastAPI y Bot) mediante Docker Compose en un VPS.
 
-    1.3. Descripción
+<div style="page-break-after: always; visibility: hidden"></div>
 
-        En que consiste el proyecto/importancia del mismo, contexto en que se va desenvolver
+---
 
-    1.4. Objetivos
+## 2. Riesgos
 
-        1.4.1 Objetivo general
-        1.4.2 Objetivos Específicos
-            Para cada objetivo específico se indicara que se va a lograr
+A continuación se identifican los principales riesgos que podrían afectar el éxito del proyecto:
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+| Categoría | Riesgo | Probabilidad | Estrategia de Mitigación |
+|-----------|--------|:------------:|--------------------------|
+| Técnico | Incompatibilidad de binarios en contenedor Docker (FastAPI) | Media | Instalar clientes explícitos en el `Dockerfile` (`postgresql-client`, `mssql-tools18`). |
+| Seguridad | Exposición de variables de entorno (Token del Bot Telegram) | Baja | Usar `.env` estrictamente y excluir del control de versiones. Gestión mediante `pydantic-settings`. |
+| Operativo | Archivos demasiado grandes para la red de Telegram (Límite 50MB) | Media | Implementar envío en chunks o proveer enlaces de descarga seguros si el archivo supera el límite de la API de Telegram. |
+| Técnico | Fallo al levantar contenedor de SQL Server en GitHub Actions | Baja | Optimizar el script de la acción y aumentar timeout para la creación del Docker temporal. |
 
-2. <span id="_Toc52661347" class="anchor"></span>**Riesgos**
+<div style="page-break-after: always; visibility: hidden"></div>
 
-    Señale los riesgos que pudieran afectar el éxito del proyecto.}*
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+## 3. Análisis de la Situación Actual
 
-3. <span id="_Toc52661348" class="anchor"></span>**Análisis de la Situación actual**
+### 3.1 Planteamiento del Problema
 
-    3.1. Planteamiento del problema
+Anteriormente, la generación y validación requerían instalar una aplicación de escritorio que consumía recursos en la máquina del cliente y ataba la solución a un único entorno local. Los flujos de desarrollo modernos exigen validaciones integradas en CI/CD y operaciones manejables remotamente sin instalar interfaces gráficas.
 
-            Describa antecedentes y situación actual, explicando la problemática y/o necesidad que será resuelta con el proyecto propuesto.
+### 3.2 Consideraciones de Hardware y Software
 
-    3.2. Consideraciones de hardware y software
+| Tipo | Componente | Especificaciones | Estado |
+|------|------------|-----------------|--------|
+| SOFTWARE | Backend Core y Telegram Bot | Python 3.10+, FastAPI, python-telegram-bot | Disponible |
+| SOFTWARE | GitHub Action | Python Core para scripts de validación, Docker | Disponible |
+| SOFTWARE | VS Code Extension | TypeScript, Node.js, API de VS Code | Disponible |
+| HARDWARE | Despliegue VPS (Producción) | 2 vCPU, 2 GB RAM, 20 GB SSD | Disponible |
+| SOFTWARE | Motores Soportados | PostgreSQL, MySQL/MariaDB, SQL Server, MongoDB | Disponible |
 
-            Hardware y software posibles para la implementación, se analizara lo que existe y es alcanzable, se evaluara que tecnología se puede > utilizar en el proyecto.
+<div style="page-break-after: always; visibility: hidden"></div>
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-4. <span id="_Toc52661349" class="anchor"></span>**Estudio de
-    Factibilidad**
+## 4. Estudio de Factibilidad
 
-    Describir los resultados que esperan alcanzar del estudio de factibilidad, las actividades que se realizaron para preparar la evaluación de factibilidad y por quien fue aprobado.
+### 4.1 Factibilidad Técnica
 
-    4.1. <span id="_Toc52661350" class="anchor"></span>Factibilidad Técnica
+El proyecto es técnicamente viable gracias a la abstracción de microservicios:
+- **Modularidad:** El uso del Patrón Estrategia en FastAPI permite soportar 4 motores usando llamadas a subprocesos (`asyncio.create_subprocess_exec`) sin bloqueos.
+- **Validación Rápida:** La validación de integridad para MySQL y PostgreSQL (leyendo los últimos 256 bytes) es ultrarrápida y aplicable tanto en la API, la Action y la extensión de VS Code.
+- **Dockerización:** Asegura que los sidecars nativos requeridos estén empaquetados junto al código, eliminando el problema de "no funciona en mi máquina".
 
-        El estudio de viabilidad técnica se enfoca en obtener un entendimiento de los recursos tecnológicos disponibles actualmente y su aplicabilidad a las necesidades que se espera tenga el proyecto. En el caso de tecnología informática esto implica una evaluación del hardware y software y como este puede cubrir las necesidades del sistema propuesto.
+### 4.2 Factibilidad Económica
 
-        Realizar una evaluación de la tecnología actual existente y la posibilidad de utilizarla en el desarrollo e implantación del sistema.*
+La solución basada en microservicios desplaza los costos hacia la infraestructura en la nube, pero gracias a los contenedores, el costo se mantiene mínimo.
 
-        Describir acerca del hardware (equipos, servidor), software (aplicaciones, navegadores, sistemas operativos, dominio, internet, infraestructura de red física, etc.
+| Categoría | Descripción | Costo Estimado (S/) |
+|-----------|-------------|:----------:|
+| VPS Cloud | Servidor Linux para Docker (FastAPI + Bot) - Anual | ~300.00 |
+| Horas Hombre | 2 desarrolladores junior | ~9,600.00 |
+| GitHub Actions | Minutos CI/CD gratuitos para repositorios públicos | 0.00 |
+| **TOTAL** | | **S/ 9,900.00** |
 
-    4.2. <span id="_Toc52661351" class="anchor"></span>Factibilidad Económica
+### 4.3 Factibilidad Operativa
 
-        El propósito del estudio de viabilidad económica, es determinar los beneficios económicos del proyecto o sistema propuesto para la organización, en contraposición con los costos.
-        Como se mencionó anteriormente en el estudio de factibilidad técnica wvaluar si la institución (departamento de TI) cuenta con las herramientas necesarias para la implantación del sistema y evaluar si la propuesta requiere o no de una inversión inicial en infraestructura informática.
-        Se plantearán los costos del proyecto.
-        Costeo del Proyecto: Consiste en estimar los costos de los recursos Humanos, materiales o consumibles y/o máquinas) directos para completar las actividades del proyecto}.*
+Es mucho más fácil de adoptar por los equipos. Los desarrolladores ya usan GitHub y VS Code; validar un backup ahora requiere solo presionar un atajo de teclado (`Ctrl + Shift + P` -> `SafeBridge: Verificar`) o hacer un push al repositorio. El Bot de Telegram permite solicitar respaldos remotos desde el teléfono.
 
-        Definir los siguientes costos:
+### 4.4 Factibilidad Legal
 
-        4.2.1. Costos Generales
+Uso de software libre y frameworks Open Source (FastAPI, React, TypeScript). El token del Bot de Telegram está sujeto a los términos de servicio de la plataforma API de Telegram.
 
-                Los costos generales son todos los gastos realizados en accesorios y material de oficina y de uso diario, necesarios para los procesos, tales como, papeles, plumas, cartuchos de impresora, marcadores, computadora etc. Colocar tabla de costos.
+### 4.5 Factibilidad Social y Ambiental
 
-        4.2.2. Costos operativos durante el desarrollo 
-        
-                Evaluar costos necesarios para la operatividad de las actividades de la empresa durante el periodo en el que se realizara el proyecto. Los costos de operación pueden ser renta de oficina, agua, luz, teléfono, etc.
+Fomenta las buenas prácticas de DevSecOps mediante la integración continua. El bajo consumo de validaciones nativas ahorra cómputo (energía) frente a la restauración completa de contenedores para validación.
 
-        4.2.3. Costos del ambiente
+<div style="page-break-after: always; visibility: hidden"></div>
 
-                Evaluar si se cuenta con los requerimientos técnicos para la implantación del software como el dominio, infraestructura de red, acceso a internet, etc.
+---
 
-        4.2.4. Costos de personal
+## 5. Análisis Financiero
 
-                Aquí se incluyen los gastos generados por el recurso humano que se necesita para el desarrollo del sistema únicamente.
+Para una agencia o equipo DevOps de 5 integrantes:
+- **Ahorro en QA de Backups:** 3 horas/semana en total (3h × S/ 30.00/h × 52 = **S/ 4,680.00**)
+- **Prevención de pérdida de datos en Producción:** **S/ 12,000.00** (valor estimado del daño por caída de un sprint debido a base de datos corrupta).
+- **Beneficio Anual:** ~S/ 16,680.00
+- **VAN:** S/ 5,263.63 (Tasa 10%)
+- **B/C:** 1.68
 
-                No se considerará personal para la operación y funcionamiento del sistema.
+El proyecto es totalmente rentable.
 
-                Incluir tabla que muestra los gastos correspondientes al personal.
+<div style="page-break-after: always; visibility: hidden"></div>
 
-                Indicar organización y roles. Indicar horario de trabajo del personal.
+---
 
-        4.2.5.  Costos totales del desarrollo del sistema
+## 6. Conclusiones
 
-                {Totalizar costos y realizar resumen de costo final del proyecto y la forma de pago.
+La evolución de SafeBridge hacia una arquitectura orientada a servicios (API, Extensiones IDE, CI/CD) representa una mejora significativa en escalabilidad, interoperabilidad y adopción. Es **factible** en todos sus aspectos y responde a las tendencias actuales de automatización DevOps y Local-first BCDR.
 
-    4.3. <span id="_Toc52661352" class="anchor"></span>Factibilidad Operativa
+---
 
-        Describir los beneficios del producto y si se tiene la capacidad por parte del cliente para mantener el sistema funcionando y garantizar el buen funcionamiento y su impacto en los usuarios. Lista de interesados.
-
-    4.4. <span id="_Toc52661353" class="anchor"></span>Factibilidad Legal
-
-        Determinar si existe conflicto del proyecto con restricciones legales como leyes y regulaciones del país o locales relacionadas con seguridad, protección de datos, conducta de negocio, empleo y adquisiciones.
-
-    4.5. <span id="_Toc52661354" class="anchor"></span>Factibilidad Social 
-
-        Evaluar influencias y asuntos de índole social y cultural como el clima político, códigos de conducta y ética*
-
-    4.6. <span id="_Toc52661355" class="anchor"></span>Factibilidad Ambiental
-
-        Evaluar influencias y asuntos de índole ambiental como el impacto y repercusión en el medio ambiente.
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-5. <span id="_Toc52661356" class="anchor"></span>**Análisis Financiero**
-
-    El plan financiero se ocupa del análisis de ingresos y gastos asociados a cada proyecto, desde el punto de vista del instante temporal en que se producen. Su misión fundamental es detectar situaciones financieramente inadecuadas.
-    Se tiene que estimar financieramente el resultado del proyecto.
-
-    5.1. Justificación de la Inversión
-
-        5.1.1. Beneficios del Proyecto
-
-            El beneficio se calcula como el margen económico menos los costes de oportunidad, que son los márgenes que hubieran podido obtenerse de haber dedicado el capital y el esfuerzo a otras actividades.
-            El beneficio, obtenido lícitamente, no es sólo una recompensa a la inversión, al esfuerzo y al riesgo asumidos por el empresario, sino que también es un factor esencial para que las empresas sigan en el  mercado e incorporen nuevas inversiones al tejido industrial y social de las naciones.
-            Describir beneficios tangibles e intangibles*
-            Beneficios tangibles: son de fácil cuantificación, generalmente están relacionados con la reducción de recursos o talento humano.
-            Beneficios intangibles: no son fácilmente cuantificables y están relacionados con elementos o mejora en otros procesos de la organización.
->
-            Ejemplo de beneficios:
-
-            - Mejoras en la eficiencia del área bajo estudio.
-            - Reducción de personal.
-            - Reducción de futuras inversiones y costos.
-            - Disponibilidad del recurso humano.
-            - Mejoras en planeación, control y uso de recursos.
-            - Suministro oportuno de insumos para las operaciones.
-            - Cumplimiento de requerimientos gubernamentales.
-            - Toma acertada de decisiones.
-            - Disponibilidad de información apropiada.
-            - Aumento en la confiabilidad de la información.
-            - Mejor servicio al cliente externo e interno
-            - Logro de ventajas competitivas.
-            - Valor agregado a un producto de la compañía.
-        
-        5.1.2. Criterios de Inversión
-
-            5.1.2.1. Relación Beneficio/Costo (B/C)
-
-                En base a los costos y beneficios identificados se evalúa si es factible el desarrollo del proyecto. 
-                Si se presentan varias alternativas de solución se evaluará cada una de ellas para determinar la mejor solución desde el punto de vista del > retorno de la inversión
-                El B/C si es mayor a uno, se acepta el proyecto; si el B/C es igual a uno es indiferente aceptar o rechazar el proyecto y si el B/C es menor a uno se rechaza el proyecto
-
-            5.1.2.2. Valor Actual Neto (VAN)
-            
-                Valor actual de los beneficios netos que genera el proyecto. Si el VAN es mayor que cero, se acepta el proyecto; si el VAN es igual a cero es indiferente aceptar o rechazar el proyecto y si el VAN es menor que cero se rechaza el proyecto
-
-            5.1.2.3 Tasa Interna de Retorno (TIR)*
-                Es la tasa porcentual que indica la rentabilidad promedio anual que genera el capital invertido en el proyecto. Si la TIR es mayor que el costo de oportunidad se acepta el proyecto, si la TIR es igual al costo de oportunidad es indiferente aceptar o rechazar el proyecto, si la TIR es menor que el costo de oportunidad se rechaza el proyecto
-
-                Costo de oportunidad de capital (COK) es la tasa de interés que podría haber obtenido con el dinero invertido en el proyecto
-
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
-
-6. <span id="_Toc52661357" class="anchor"></span>**Conclusiones**
-
-Explicar los resultados del análisis de factibilidad que nos indican si el proyecto es viable y factible.
+*Documento elaborado por: Iker Alberto Sierra Ruiz (2023077090) y Julio Samuel Cortez Mamani (2023077283) — Universidad Privada de Tacna, 2026.*
