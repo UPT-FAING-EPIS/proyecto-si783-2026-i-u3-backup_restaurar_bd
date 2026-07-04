@@ -11,7 +11,7 @@ pub fn init_db(app_dir: &PathBuf) -> Result<Connection> {
 
     // Habilitar Foreign Keys
     conn.execute("PRAGMA foreign_keys = ON;", [])?;
-    
+
     // Crear tabla connections (T-010)
     conn.execute(
         "CREATE TABLE IF NOT EXISTS connections (
@@ -49,9 +49,15 @@ pub fn init_db(app_dir: &PathBuf) -> Result<Connection> {
         )",
         [],
     )?;
-    
+
     // Migración simple: intentar agregar la columna si la tabla ya existía sin ella
     let _ = conn.execute("ALTER TABLE backup_logs ADD COLUMN full_logs TEXT", []);
-    
+
+    // Migración: agregar columna use_ssl a connections (para conexiones cloud que requieren SSL)
+    let _ = conn.execute(
+        "ALTER TABLE connections ADD COLUMN use_ssl INTEGER NOT NULL DEFAULT 0",
+        [],
+    );
+
     Ok(conn)
 }

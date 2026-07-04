@@ -32,9 +32,7 @@
       "binaries/sqlcmd",
       "binaries/mongodump"
     ],
-    "resources": [
-      "resources/pg_deps/*"
-    ],
+    "resources": ["resources/pg_deps/*", "resources/mysql_deps/*"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

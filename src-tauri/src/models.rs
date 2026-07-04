@@ -11,6 +11,8 @@ pub struct ConnectionInfo {
     pub password: Option<String>,
     pub database_name: String,
     pub backup_path: String,
+    #[serde(default)]
+    pub use_ssl: bool,
     pub created_at: Option<String>,
 }
 

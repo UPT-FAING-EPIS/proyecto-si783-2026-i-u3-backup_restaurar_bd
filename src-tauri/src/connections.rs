@@ -1,6 +1,6 @@
-use crate::AppState;
-use crate::models::ConnectionInfo;
 use crate::crypto;
+use crate::models::ConnectionInfo;
+use crate::AppState;
 use tauri::State;
 use uuid::Uuid;
 
@@ -15,8 +15,8 @@ pub fn create_connection(
 
     let db = state.db.lock().unwrap();
     db.execute(
-        "INSERT INTO connections (id, name, engine, host, port, username, password, database_name, backup_path) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        "INSERT INTO connections (id, name, engine, host, port, username, password, database_name, backup_path, use_ssl) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
         (
             &id,
             &conn.name,
@@ -27,6 +27,7 @@ pub fn create_connection(
             &encrypted_password,
             &conn.database_name,
             &conn.backup_path,
+            conn.use_ssl,
         ),
     ).map_err(|e| format!("Database error: {}", e))?;
 
@@ -37,23 +38,26 @@ pub fn create_connection(
 pub fn list_connections(state: State<'_, AppState>) -> Result<Vec<ConnectionInfo>, String> {
     let db = state.db.lock().unwrap();
     let mut stmt = db.prepare(
-        "SELECT id, name, engine, host, port, username, database_name, backup_path, created_at FROM connections ORDER BY created_at DESC"
+        "SELECT id, name, engine, host, port, username, database_name, backup_path, created_at, use_ssl FROM connections ORDER BY created_at DESC"
     ).map_err(|e| format!("Database error: {}", e))?;
 
-    let iter = stmt.query_map([], |row| {
-        Ok(ConnectionInfo {
-            id: Some(row.get(0)?),
-            name: row.get(1)?,
-            engine: row.get(2)?,
-            host: row.get(3)?,
-            port: row.get(4)?,
-            username: row.get(5)?,
-            password: None, // Nunca enviar la contraseña de vuelta al frontend
-            database_name: row.get(6)?,
-            backup_path: row.get(7)?,
-            created_at: Some(row.get(8)?),
+    let iter = stmt
+        .query_map([], |row| {
+            Ok(ConnectionInfo {
+                id: Some(row.get(0)?),
+                name: row.get(1)?,
+                engine: row.get(2)?,
+                host: row.get(3)?,
+                port: row.get(4)?,
+                username: row.get(5)?,
+                password: None, // Nunca enviar la contraseña de vuelta al frontend
+                database_name: row.get(6)?,
+                backup_path: row.get(7)?,
+                use_ssl: row.get(9)?,
+                created_at: Some(row.get(8)?),
+            })
         })
-    }).map_err(|e| format!("Database error: {}", e))?;
+        .map_err(|e| format!("Database error: {}", e))?;
 
     let mut connections = Vec::new();
     for conn in iter {
@@ -72,12 +76,12 @@ pub fn update_connection(
     conn: ConnectionInfo,
 ) -> Result<(), String> {
     let db = state.db.lock().unwrap();
-    
+
     if let Some(password) = conn.password {
         if !password.is_empty() {
             let encrypted_password = crypto::encrypt_password(&password)?;
             db.execute(
-                "UPDATE connections SET name=?1, engine=?2, host=?3, port=?4, username=?5, password=?6, database_name=?7, backup_path=?8 WHERE id=?9",
+                "UPDATE connections SET name=?1, engine=?2, host=?3, port=?4, username=?5, password=?6, database_name=?7, backup_path=?8, use_ssl=?9 WHERE id=?10",
                 (
                     &conn.name,
                     &conn.engine,
@@ -87,16 +91,17 @@ pub fn update_connection(
                     &encrypted_password,
                     &conn.database_name,
                     &conn.backup_path,
+                    conn.use_ssl,
                     &id,
                 ),
             ).map_err(|e| format!("Database error: {}", e))?;
             return Ok(());
         }
     }
-    
+
     // Si no se envía contraseña, no actualizarla
     db.execute(
-        "UPDATE connections SET name=?1, engine=?2, host=?3, port=?4, username=?5, database_name=?6, backup_path=?7 WHERE id=?8",
+        "UPDATE connections SET name=?1, engine=?2, host=?3, port=?4, username=?5, database_name=?6, backup_path=?7, use_ssl=?8 WHERE id=?9",
         (
             &conn.name,
             &conn.engine,
@@ -105,6 +110,7 @@ pub fn update_connection(
             &conn.username,
             &conn.database_name,
             &conn.backup_path,
+            conn.use_ssl,
             &id,
         ),
     ).map_err(|e| format!("Database error: {}", e))?;
@@ -126,8 +132,10 @@ pub fn test_connection(host: String, port: u16) -> Result<bool, String> {
     use std::time::Duration;
 
     let addr_str = format!("{}:{}", host, port);
-    let mut addrs = addr_str.to_socket_addrs().map_err(|e| format!("Invalid address: {}", e))?;
-    
+    let mut addrs = addr_str
+        .to_socket_addrs()
+        .map_err(|e| format!("Invalid address: {}", e))?;
+
     if let Some(addr) = addrs.next() {
         match TcpStream::connect_timeout(&addr, Duration::from_secs(3)) {
             Ok(_) => Ok(true),

@@ -9,6 +9,7 @@ node_modules/
 dist/
 dist-ssr/
 build/
+coverage/
 
 # ── Rust / Tauri ──────────────────────────────────
 src-tauri/target/
@@ -17,8 +18,9 @@ src-tauri/gen/schemas/
 # ── Sidecar binaries (large EXEs, each dev downloads their own) ─
 src-tauri/binaries/*.exe
 
-# ── Native DLL dependencies for pg_dump ───────────
+# ── Native DLL dependencies for databases ───────────
 src-tauri/resources/pg_deps/
+src-tauri/resources/mysql_deps/
 
 # ── Temp downloads (tool install cache) ───────────
 src-tauri/temp_downloads/
@@ -26,7 +28,6 @@ src-tauri/temp_downloads/
 # ── Portable / installer artifacts ────────────────
 SafeBridge-Portable/
 SafeBridge-Portable.zip
-create_portable.ps1
 
 # ── SQLite databases (runtime data) ───────────────
 *.db
@@ -69,14 +70,3 @@ Desktop.ini
 # ── Package lock (optional — keep if you want reproducible builds) ─
 # package-lock.json
 # Cargo.lock  ← keep for binaries, per Cargo docs
-
-# ── Testing & CI/CD Artifacts ─────────────────────
-coverage/
-reports/
-public/
-vitest-report.xml
-semgrep-report.txt
-playwright-report/
-test-results/
-.stryker-tmp/
-stryker.log
