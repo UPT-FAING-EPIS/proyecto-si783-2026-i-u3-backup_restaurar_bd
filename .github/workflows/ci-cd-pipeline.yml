@@ -83,11 +83,7 @@ jobs:
           
           # Si snyk-to-html falla o el token no es válido
           if [ ! -f public/snyk-report.html ]; then
-            cat <<'SNYK_EOF' > public/snyk-report.html
-            <!DOCTYPE html><html><head><title>Snyk Report</title>
-            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
-            </head><body><h1>🛡️ Snyk SCA Report</h1><p>No se encontraron vulnerabilidades o el token no fue configurado correctamente.</p></body></html>
-          SNYK_EOF
+            echo '<!DOCTYPE html><html><head><title>Snyk Report</title><style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style></head><body><h1>🛡️ Snyk SCA Report</h1><p>No se encontraron vulnerabilidades o el token no fue configurado correctamente.</p></body></html>' > public/snyk-report.html
           fi
 
       # ----------------------------------------------------
@@ -114,11 +110,7 @@ jobs:
           mkdir -p public/stryker
           cp -r reports/mutation/html/* public/stryker/ 2>/dev/null || true
           if [ ! -f public/stryker/index.html ]; then
-            cat <<'STRYKER_EOF' > public/stryker/index.html
-            <!DOCTYPE html><html><head><title>Stryker Report</title>
-            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
-            </head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones falló o está en proceso.</p></body></html>
-          STRYKER_EOF
+            echo '<!DOCTYPE html><html><head><title>Stryker Report</title><style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style></head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones falló o está en proceso.</p></body></html>' > public/stryker/index.html
           fi
 
       # ----------------------------------------------------
@@ -133,11 +125,7 @@ jobs:
           mkdir -p public/bdd
           cp -r playwright-report/* public/bdd/ 2>/dev/null || true
           if [ ! -f public/bdd/index.html ]; then
-            cat <<'BDD_EOF' > public/bdd/index.html
-            <!DOCTYPE html><html><head><title>BDD Report</title>
-            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
-            </head><body><h1>🎭 Playwright BDD Report</h1><p>El reporte de BDD no se generó correctamente.</p></body></html>
-            BDD_EOF
+            echo '<!DOCTYPE html><html><head><title>BDD Report</title><style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style></head><body><h1>🎭 Playwright BDD Report</h1><p>El reporte de BDD no se generó correctamente.</p></body></html>' > public/bdd/index.html
           fi
 
       # ----------------------------------------------------
