@@ -1,0 +1,17 @@
+# Prerrequisitos del Sistema
+Node.js >= 18.0.0
+Rust >= 1.70.0 (stable)
+Cargo (incluido con Rust)
+
+# Dependencias de Frontend (Instalar con: npm install)
+# - React 19
+# - TypeScript
+# - Vite
+# - Tailwind CSS v4
+# - Tauri CLI
+
+# Dependencias de Backend (Instaladas automáticamente al compilar con Tauri/Cargo)
+# - tauri v2
+# - rusqlite (SQLite)
+# - serde
+# - ring (para encriptación AES-256-GCM)
