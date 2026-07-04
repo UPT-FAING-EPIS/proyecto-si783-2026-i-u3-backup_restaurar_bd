@@ -46,27 +46,30 @@ jobs:
       - name: Semgrep Analysis (HTML)
         run: |
           pip install semgrep
-          semgrep scan --config auto > public/semgrep-report.txt 2>&1 || true
-          cat <<'SEMGREP_EOF' > public/semgrep-report.html
-          <!DOCTYPE html>
-          <html lang="es">
-          <head>
-            <meta charset="UTF-8">
-            <title>Semgrep Report - SafeBridge</title>
-            <style>
-              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 40px; background: #0d1117; color: #c9d1d9; }
-              h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 16px; }
-              pre { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; overflow-x: auto; font-size: 13px; line-height: 1.6; }
-              a { color: #58a6ff; }
-            </style>
-          </head>
-          <body>
-            <h1>🔍 Reporte de Análisis Estático — Semgrep</h1>
-            <p>Generado automáticamente por el pipeline CI/CD de SafeBridge.</p>
-            <pre>
-          SEMGREP_EOF
-          cat public/semgrep-report.txt >> public/semgrep-report.html || true
-          echo '</pre></body></html>' >> public/semgrep-report.html
+          semgrep scan --config auto --json > public/semgrep.json 2>&1 || true
+          cat <<'PYTHON_SCRIPT' > generate_semgrep_html.py
+          import json, sys
+          try:
+              with open('public/semgrep.json') as f:
+                  data = json.load(f)
+              html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Semgrep Report - SafeBridge</title><style>body{font-family:"Segoe UI",Arial,sans-serif;margin:0;padding:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff;border-bottom:1px solid #30363d;padding-bottom:16px}.issue{background:#161b22;padding:20px;border-radius:8px;border:1px solid #30363d;margin-bottom:16px}.issue h3{color:#f85149;margin-top:0}.issue p{font-size:14px;color:#8b949e}code{background:#0d1117;padding:2px 6px;border-radius:4px}</style></head><body>'
+              html += '<h1>🔍 Reporte de Análisis Estático — Semgrep</h1>'
+              html += f'<p>Total de hallazgos: {len(data.get("results", []))}</p>'
+              for res in data.get('results', []):
+                  html += f'<div class="issue"><h3>{res.get("check_id")}</h3>'
+                  html += f'<p><strong>Archivo:</strong> <code>{res.get("path")}</code> (Línea {res.get("start", {}).get("line")})</p>'
+                  html += f'<p>{res.get("extra", {}).get("message")}</p></div>'
+              if not data.get('results'):
+                  html += '<div class="issue"><h3 style="color:#238636">✅ ¡Código Limpio!</h3><p>No se detectaron vulnerabilidades de seguridad ni malas prácticas en el análisis estático.</p></div>'
+              html += '</body></html>'
+              with open('public/semgrep-report.html', 'w', encoding='utf-8') as f:
+                  f.write(html)
+          except Exception as e:
+              with open('public/semgrep-report.html', 'w', encoding='utf-8') as f:
+                  f.write(f'<html><body style="background:#0d1117;color:#c9d1d9;font-family:Arial;padding:40px"><h1>🔍 Reporte Semgrep</h1><p>Ocurrió un error o no se detectaron vulnerabilidades.</p><pre>{e}</pre></body></html>')
+          PYTHON_SCRIPT
+          python generate_semgrep_html.py
+          rm -f public/semgrep.json generate_semgrep_html.py
 
       - name: Snyk SCA (HTML)
         env:
@@ -103,12 +106,12 @@ jobs:
         run: |
           npx stryker run || true
           mkdir -p public/stryker
-          cp -r reports/mutation/* public/stryker/ 2>/dev/null || true
+          cp -r reports/mutation/html/* public/stryker/ 2>/dev/null || true
           if [ ! -f public/stryker/index.html ]; then
             cat <<'STRYKER_EOF' > public/stryker/index.html
             <!DOCTYPE html><html><head><title>Stryker Report</title>
             <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
-            </head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones se generará cuando Stryker complete su análisis.</p></body></html>
+            </head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones falló o está en proceso.</p></body></html>
           STRYKER_EOF
           fi
 
