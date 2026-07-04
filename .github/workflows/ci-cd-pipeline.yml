@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm install -g snyk snyk-to-html
 
       - name: Create Public Directory
