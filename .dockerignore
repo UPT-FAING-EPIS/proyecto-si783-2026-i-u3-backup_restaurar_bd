@@ -1,9 +1,0 @@
-.git
-node_modules
-dist
-.env
-terraform/
-.github/
-tests/
-src-tauri/target/
-*.md

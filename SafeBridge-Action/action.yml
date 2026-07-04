@@ -1,0 +1,79 @@
+name: 'Verify Database Backup'
+description: 'Verifica la integridad de archivos de respaldo (.bak, .sql, .bson, .archive) de múltiples bases de datos.'
+
+inputs:
+  sqlserver_password:
+    description: 'Contraseña del usuario SA si se va a verificar un backup de SQL Server (.bak)'
+    required: false
+    default: 'YourStrong!Passw0rd'
+  file_path:
+    description: 'Ruta específica del archivo de backup. Si se deja en "auto", buscará el primero disponible.'
+    required: false
+    default: 'auto'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install System Dependencies (ODBC)
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y unixodbc unixodbc-dev
+        
+        # Install Microsoft ODBC 18 Driver
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc
+        curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+
+    - name: Install Python Dependencies
+      shell: bash
+      run: |
+        # ${{ github.action_path }} apunta a donde está descargado este Action Reutilizable
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Find and Verify Backup
+      shell: bash
+      run: |
+        if [ "${{ inputs.file_path }}" = "auto" ]; then
+          # Busca en el workspace del repositorio que está usando el Action
+          BACKUP_FILE=$(find . -type f \( -name "*.bak" -o -name "*.sql" -o -name "*.bson" -o -name "*.archive" \) | head -n 1)
+        else
+          BACKUP_FILE="${{ inputs.file_path }}"
+        fi
+
+        if [ -z "$BACKUP_FILE" ]; then
+          echo "No backup file found to verify."
+          exit 0
+        fi
+
+        echo "Verifying backup file: $BACKUP_FILE"
+
+        # Si es .bak, levantamos el contenedor de SQL Server temporalmente
+        if [[ "$BACKUP_FILE" == *.bak ]]; then
+          echo "SQL Server backup detected. Starting temporary Docker container..."
+          docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=${{ inputs.sqlserver_password }}' -p 1433:1433 -d --name sql_verify_temp mcr.microsoft.com/mssql/server:2022-latest
+          
+          # Esperar a que el motor arranque (15-20 seg normalmente en GHA)
+          echo "Waiting for SQL Server to initialize..."
+          sleep 20
+        fi
+
+        # Ejecutamos el script de Python que está en el repositorio de la Acción
+        python ${{ github.action_path }}/verify_backup.py \
+          --file "$BACKUP_FILE" \
+          --server "localhost,1433" \
+          --user "sa" \
+          --password "${{ inputs.sqlserver_password }}"
+
+        # Limpiamos el contenedor si se usó
+        if [[ "$BACKUP_FILE" == *.bak ]]; then
+          echo "Cleaning up temporary Docker container..."
+          docker stop sql_verify_temp
+          docker rm sql_verify_temp
+        fi
