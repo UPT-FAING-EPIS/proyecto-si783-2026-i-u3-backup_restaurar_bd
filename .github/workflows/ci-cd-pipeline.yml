@@ -75,12 +75,18 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: |
-          snyk test --file=package.json --json | snyk-to-html -o public/snyk-report.html || true
+          # Extraer vulnerabilities en JSON
+          snyk test --file=package.json --json > snyk.json || true
+          
+          # Generar HTML desde el JSON guardado
+          snyk-to-html -i snyk.json -o public/snyk-report.html || true
+          
+          # Si snyk-to-html falla o el token no es válido
           if [ ! -f public/snyk-report.html ]; then
             cat <<'SNYK_EOF' > public/snyk-report.html
             <!DOCTYPE html><html><head><title>Snyk Report</title>
             <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
-            </head><body><h1>🛡️ Snyk SCA Report</h1><p>No se encontraron vulnerabilidades o el token no fue configurado.</p></body></html>
+            </head><body><h1>🛡️ Snyk SCA Report</h1><p>No se encontraron vulnerabilidades o el token no fue configurado correctamente.</p></body></html>
           SNYK_EOF
           fi
 
@@ -113,6 +119,25 @@ jobs:
             <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
             </head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones falló o está en proceso.</p></body></html>
           STRYKER_EOF
+          fi
+
+      # ----------------------------------------------------
+      # 4. PRUEBAS BDD Y E2E (Playwright)
+      # ----------------------------------------------------
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run BDD Tests (Playwright)
+        run: |
+          npx playwright test || true
+          mkdir -p public/bdd
+          cp -r playwright-report/* public/bdd/ 2>/dev/null || true
+          if [ ! -f public/bdd/index.html ]; then
+            cat <<'BDD_EOF' > public/bdd/index.html
+            <!DOCTYPE html><html><head><title>BDD Report</title>
+            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
+            </head><body><h1>🎭 Playwright BDD Report</h1><p>El reporte de BDD no se generó correctamente.</p></body></html>
+            BDD_EOF
           fi
 
       # ----------------------------------------------------
@@ -174,6 +199,13 @@ jobs:
                   <div class="info">
                     <h3>Reporte de Vulnerabilidades de Dependencias</h3>
                     <p>Snyk SCA — Análisis de composición de software (npm)</p>
+                  </div>
+                </a>
+                <a class="card" href="bdd/index.html">
+                  <div class="icon">🎭</div>
+                  <div class="info">
+                    <h3>Reporte de Comportamiento (BDD)</h3>
+                    <p>Playwright — Pruebas E2E y videos de la interfaz</p>
                   </div>
                 </a>
               </div>

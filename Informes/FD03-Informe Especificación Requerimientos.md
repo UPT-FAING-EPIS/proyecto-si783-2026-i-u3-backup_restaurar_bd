@@ -190,29 +190,41 @@ Versión *3.0*
 ## 3. Diagrama de Casos de Uso
 
 ```mermaid
-usecaseDiagram
-actor "Desarrollador (Usuario)" as User
-actor "Sistema SafeBridge (Rust Core)" as System
+graph LR
+    subgraph Actores
+        User["👤 Desarrollador (Usuario)"]
+        System["⚙️ Sistema SafeBridge (Rust Core)"]
+    end
 
-rectangle "SafeBridge - Gestión de Backups" {
-  User -- (CU-01: Gestionar Conexiones DB)
-  (CU-01: Gestionar Conexiones DB) ..> (Cifrar Credenciales AES-256) : <<include>>
-  
-  User -- (CU-02: Probar Conectividad TCP)
-  User -- (CU-03: Generar Volcado Multi-Motor)
-  
-  (CU-03: Generar Volcado Multi-Motor) ..> (Inyectar Credencial Temporal) : <<include>>
-  (CU-03: Generar Volcado Multi-Motor) ..> (Emitir Logs en Tiempo Real) : <<include>>
-  
-  System -- (CU-04: Validar Integridad EOF)
-  System -- (Calcular Hash SHA-256)
-  
-  (CU-03: Generar Volcado Multi-Motor) <.. (CU-04: Validar Integridad EOF) : <<extend>>
-  (CU-03: Generar Volcado Multi-Motor) <.. (Calcular Hash SHA-256) : <<extend>>
-  
-  User -- (CU-05: Consultar Dashboard)
-  User -- (CU-06: Consultar Historial)
-}
+    subgraph "SafeBridge - Gestión de Backups"
+        CU01(["CU-01: Gestionar Conexiones DB"])
+        CU02(["CU-02: Probar Conectividad TCP"])
+        CU03(["CU-03: Generar Volcado Multi-Motor"])
+        CU04(["CU-04: Validar Integridad EOF"])
+        CU05(["CU-05: Consultar Dashboard"])
+        CU06(["CU-06: Consultar Historial"])
+        
+        INC1(["Cifrar Credenciales AES-256"])
+        INC2(["Inyectar Credencial Temporal"])
+        INC3(["Emitir Logs en Tiempo Real"])
+        EXT1(["Calcular Hash SHA-256"])
+    end
+
+    User --- CU01
+    User --- CU02
+    User --- CU03
+    User --- CU05
+    User --- CU06
+    
+    System --- CU04
+    System --- EXT1
+
+    CU01 -. "<<include>>" .-> INC1
+    CU03 -. "<<include>>" .-> INC2
+    CU03 -. "<<include>>" .-> INC3
+    
+    CU04 -. "<<extend>>" .-> CU03
+    EXT1 -. "<<extend>>" .-> CU03
 ```
 
 <div style="page-break-after: always; visibility: hidden"></div>
