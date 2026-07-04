@@ -1,0 +1,193 @@
+name: CI/CD Pipeline Unificado
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+  security-events: write
+  checks: write
+
+jobs:
+  build-and-test:
+    name: Build, Test & Report
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for Semgrep)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm install -g snyk snyk-to-html
+
+      - name: Create Public Directory
+        run: mkdir -p public
+
+      # ----------------------------------------------------
+      # 1. ANÁLISIS ESTÁTICO Y SEGURIDAD (Semgrep & Snyk)
+      # ----------------------------------------------------
+      - name: Semgrep Analysis (HTML)
+        run: |
+          pip install semgrep
+          semgrep scan --config auto > public/semgrep-report.txt 2>&1 || true
+          cat <<'SEMGREP_EOF' > public/semgrep-report.html
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <title>Semgrep Report - SafeBridge</title>
+            <style>
+              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 40px; background: #0d1117; color: #c9d1d9; }
+              h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 16px; }
+              pre { background: #161b22; padding: 20px; border-radius: 8px; border: 1px solid #30363d; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+              a { color: #58a6ff; }
+            </style>
+          </head>
+          <body>
+            <h1>🔍 Reporte de Análisis Estático — Semgrep</h1>
+            <p>Generado automáticamente por el pipeline CI/CD de SafeBridge.</p>
+            <pre>
+          SEMGREP_EOF
+          cat public/semgrep-report.txt >> public/semgrep-report.html || true
+          echo '</pre></body></html>' >> public/semgrep-report.html
+
+      - name: Snyk SCA (HTML)
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk test --file=package.json --json | snyk-to-html -o public/snyk-report.html || true
+          if [ ! -f public/snyk-report.html ]; then
+            cat <<'SNYK_EOF' > public/snyk-report.html
+            <!DOCTYPE html><html><head><title>Snyk Report</title>
+            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
+            </head><body><h1>🛡️ Snyk SCA Report</h1><p>No se encontraron vulnerabilidades o el token no fue configurado.</p></body></html>
+          SNYK_EOF
+          fi
+
+      # ----------------------------------------------------
+      # 2. PRUEBAS UNITARIAS, INTEGRACIÓN Y COBERTURA
+      # ----------------------------------------------------
+      - name: Run Unit & Integration Tests (Coverage + JUnit)
+        run: |
+          npx vitest run --coverage --reporter=junit --outputFile=vitest-report.xml || true
+          cp -r coverage public/coverage || true
+          rm -f public/coverage/.gitignore
+
+      - name: Publish Test Report (Annotations)
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure()
+        with:
+          report_paths: 'vitest-report.xml'
+
+      # ----------------------------------------------------
+      # 3. MUTATION TESTING (Stryker)
+      # ----------------------------------------------------
+      - name: Run Mutation Tests (Stryker)
+        run: |
+          npx stryker run || true
+          mkdir -p public/stryker
+          cp -r reports/mutation/* public/stryker/ 2>/dev/null || true
+          if [ ! -f public/stryker/index.html ]; then
+            cat <<'STRYKER_EOF' > public/stryker/index.html
+            <!DOCTYPE html><html><head><title>Stryker Report</title>
+            <style>body{font-family:Arial;margin:40px;background:#0d1117;color:#c9d1d9}h1{color:#58a6ff}</style>
+            </head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones se generará cuando Stryker complete su análisis.</p></body></html>
+          STRYKER_EOF
+          fi
+
+      # ----------------------------------------------------
+      # 4. INDEX.HTML PARA GITHUB PAGES
+      # ----------------------------------------------------
+      - name: Generate Index for GH Pages
+        run: |
+          cat <<'EOF' > public/index.html
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Dashboard CI/CD — SafeBridge</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 40px 20px; }
+              .container { max-width: 800px; margin: 0 auto; }
+              h1 { color: #58a6ff; font-size: 2em; margin-bottom: 8px; }
+              .subtitle { color: #8b949e; margin-bottom: 32px; font-size: 1.1em; }
+              .badge { display: inline-block; background: #238636; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; margin-left: 12px; }
+              .cards { display: grid; gap: 16px; }
+              .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 16px; text-decoration: none; color: #c9d1d9; transition: all 0.2s; }
+              .card:hover { border-color: #58a6ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+              .card .icon { font-size: 1.8em; min-width: 40px; text-align: center; }
+              .card .info h3 { color: #f0f6fc; font-size: 1.1em; margin-bottom: 4px; }
+              .card .info p { color: #8b949e; font-size: 0.9em; }
+              .footer { margin-top: 40px; text-align: center; color: #484f58; font-size: 0.85em; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🛡️ SafeBridge <span class="badge">CI/CD</span></h1>
+              <p class="subtitle">Dashboard de Reportes de Calidad — Sistema de Backup y Restauración de BD</p>
+              <div class="cards">
+                <a class="card" href="coverage/index.html">
+                  <div class="icon">📊</div>
+                  <div class="info">
+                    <h3>Reporte de Cobertura de Pruebas</h3>
+                    <p>Vitest + V8 Coverage — Pruebas unitarias, integración y UI</p>
+                  </div>
+                </a>
+                <a class="card" href="stryker/index.html">
+                  <div class="icon">👾</div>
+                  <div class="info">
+                    <h3>Reporte de Pruebas de Mutación</h3>
+                    <p>Stryker Mutator — Calidad de las pruebas mediante mutaciones de código</p>
+                  </div>
+                </a>
+                <a class="card" href="semgrep-report.html">
+                  <div class="icon">🔍</div>
+                  <div class="info">
+                    <h3>Reporte de Análisis Estático</h3>
+                    <p>Semgrep — Detección de vulnerabilidades y patrones inseguros</p>
+                  </div>
+                </a>
+                <a class="card" href="snyk-report.html">
+                  <div class="icon">🛡️</div>
+                  <div class="info">
+                    <h3>Reporte de Vulnerabilidades de Dependencias</h3>
+                    <p>Snyk SCA — Análisis de composición de software (npm)</p>
+                  </div>
+                </a>
+              </div>
+              <div class="footer">
+                <p>Generado automáticamente por GitHub Actions — SafeBridge CI/CD Pipeline</p>
+              </div>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      # ----------------------------------------------------
+      # 5. DESPLIEGUE A GITHUB PAGES
+      # ----------------------------------------------------
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public

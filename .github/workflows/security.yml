@@ -1,0 +1,28 @@
+name: Security Analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security:
+    name: Static Analysis & SCA
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Semgrep Analysis
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/default"
+          
+      - name: Snyk SCA (Dependencies)
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --file=package.json
