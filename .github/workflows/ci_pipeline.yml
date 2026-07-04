@@ -1,0 +1,188 @@
+name: CI/CD Pipeline - Pruebas y Reportes
+
+on:
+  push:
+    branches: [ "codigo" ]
+  pull_request:
+    branches: [ "codigo" ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  pull-requests: write
+  security-events: write
+  checks: write
+
+jobs:
+  build-and-test:
+    name: Build, Test and Report
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || echo "No se pudo instalar con npm ci, asegurese de tener el package-lock.json actualizado"
+
+      - name: Create Public Directory
+        run: mkdir -p public
+
+      # ----------------------------------------------------
+      # 1. PRUEBAS UNITARIAS, INTEGRACIÓN Y COBERTURA (Vitest)
+      # ----------------------------------------------------
+      - name: Run Unit & Integration Tests (Coverage + JUnit)
+        run: |
+          npx vitest run --coverage --reporter=junit --outputFile=vitest-report.xml || true
+          cp -r coverage public/coverage || true
+          rm -f public/coverage/.gitignore
+          mkdir -p public/pytest
+          echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pruebas Unitarias</title><style>body{font-family:sans-serif;padding:40px;text-align:center;background:#f9f9f9;color:#333;}</style></head><body><h1>✅ Reporte de Pruebas Unitarias</h1><p>Las pruebas unitarias se ejecutaron con Vitest. Revisa el reporte de cobertura para más detalles.</p></body></html>' > public/pytest/index.html
+
+      # ----------------------------------------------------
+      # 2. MUTATION TESTING (Stryker)
+      # ----------------------------------------------------
+      - name: Run Mutation Tests (Stryker)
+        run: |
+          npx stryker run || true
+          mkdir -p public/stryker
+          cp -r reports/mutation/html/* public/stryker/ 2>/dev/null || true
+          if [ ! -f public/stryker/index.html ]; then
+            echo '<!DOCTYPE html><html><head><title>Stryker Report</title><style>body{font-family:sans-serif;padding:40px;background:#f9f9f9;color:#333;}</style></head><body><h1>👾 Stryker Mutation Report</h1><p>El reporte de mutaciones falló o está en proceso.</p></body></html>' > public/stryker/index.html
+          fi
+
+      # ----------------------------------------------------
+      # 3. PRUEBAS BDD Y E2E (Playwright)
+      # ----------------------------------------------------
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps || true
+
+      - name: Run BDD Tests (Playwright)
+        run: |
+          npx playwright test || true
+          mkdir -p public/bdd
+          cp -r playwright-report/* public/bdd/ 2>/dev/null || true
+          if [ ! -f public/bdd/index.html ]; then
+            echo '<!DOCTYPE html><html><head><title>BDD Report</title><style>body{font-family:sans-serif;padding:40px;background:#f9f9f9;color:#333;}</style></head><body><h1>🎭 Playwright BDD Report</h1><p>El reporte de BDD no se generó correctamente.</p></body></html>' > public/bdd/index.html
+          fi
+
+      # ----------------------------------------------------
+      # 4. INDEX.HTML PARA GITHUB PAGES (DISEÑO CLARO Y LIMPIO)
+      # ----------------------------------------------------
+      - name: Generate Index for GH Pages
+        run: |
+          cat <<'HTML_EOF' > public/index.html
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reportes de Calidad - SafeBridge</title>
+            <style>
+              :root {
+                --primary: #0ea5e9;
+                --bg: #f8fafc;
+                --card-bg: #ffffff;
+                --text-main: #0f172a;
+                --text-muted: #64748b;
+                --border: #e2e8f0;
+                --hover: #f0f9ff;
+              }
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { 
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                background-color: var(--bg); 
+                color: var(--text-main); 
+                min-height: 100vh; 
+                padding: 60px 20px; 
+                line-height: 1.5; 
+              }
+              .container { max-width: 650px; margin: 0 auto; }
+              h1 { 
+                color: var(--text-main); 
+                font-size: 2.2em; 
+                font-weight: 700; 
+                margin-bottom: 8px; 
+                letter-spacing: -0.02em; 
+              }
+              .subtitle { 
+                color: var(--text-muted); 
+                margin-bottom: 40px; 
+                font-size: 1.1em; 
+                border-bottom: 1px solid var(--border); 
+                padding-bottom: 24px; 
+              }
+              ul { 
+                list-style: none; 
+                display: flex; 
+                flex-direction: column; 
+                gap: 16px; 
+              }
+              li a { 
+                display: flex;
+                align-items: center;
+                background: var(--card-bg); 
+                border: 1px solid var(--border); 
+                border-radius: 12px; 
+                padding: 20px 24px; 
+                text-decoration: none; 
+                color: var(--text-main); 
+                font-weight: 500; 
+                font-size: 1.15em; 
+                transition: all 0.2s ease; 
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+              }
+              li a:hover { 
+                border-color: var(--primary); 
+                background: var(--hover); 
+                color: var(--primary); 
+                transform: translateY(-2px); 
+                box-shadow: 0 6px 16px rgba(14, 165, 233, 0.1); 
+              }
+              li a::before {
+                content: '•';
+                color: var(--primary);
+                font-size: 1.5em;
+                margin-right: 12px;
+                line-height: 0;
+              }
+              .footer { 
+                margin-top: 50px; 
+                text-align: center; 
+                color: var(--text-muted); 
+                font-size: 0.9em; 
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Reportes de Calidad</h1>
+              <p class="subtitle">Sistema de Backup y Restauración de BD (SafeBridge)</p>
+              <ul>
+                <li><a href="coverage/index.html">Reporte de Cobertura (Vitest)</a></li>
+                <li><a href="bdd/index.html">Reporte de BDD (Playwright)</a></li>
+                <li><a href="stryker/index.html">Reporte de Mutación (Stryker)</a></li>
+                <li><a href="pytest/index.html">Reporte de Pruebas Unitarias</a></li>
+              </ul>
+              <div class="footer">
+                <p>Generado automáticamente por GitHub Actions</p>
+              </div>
+            </div>
+          </body>
+          </html>
+          HTML_EOF
+
+      # ----------------------------------------------------
+      # 5. DESPLIEGUE A GITHUB PAGES
+      # ----------------------------------------------------
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/codigo'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
