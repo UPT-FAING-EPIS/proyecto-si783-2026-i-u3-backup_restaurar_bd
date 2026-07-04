@@ -69,3 +69,14 @@ Desktop.ini
 # ── Package lock (optional — keep if you want reproducible builds) ─
 # package-lock.json
 # Cargo.lock  ← keep for binaries, per Cargo docs
+
+# ── Testing & CI/CD Artifacts ─────────────────────
+coverage/
+reports/
+public/
+vitest-report.xml
+semgrep-report.txt
+playwright-report/
+test-results/
+.stryker-tmp/
+stryker.log
