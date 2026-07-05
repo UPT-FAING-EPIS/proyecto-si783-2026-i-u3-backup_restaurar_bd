@@ -93,12 +93,9 @@ jobs:
           
       - name: Create index.html for Pages
         run: |
-          echo "<html><body><h1>Reportes de Calidad - Migrador BD</h1><ul>" > public/index.html
-          echo "<li><a href='coverage/index.html'>Reporte de Cobertura (Pytest)</a></li>" >> public/index.html
-          echo "<li><a href='bdd/index.html'>Reporte de BDD (Behave)</a></li>" >> public/index.html
-          echo "<li><a href='mutation/index.html'>Reporte de Mutación (Mutmut)</a></li>" >> public/index.html
-          echo "<li><a href='pytest/index.html'>Reporte de Pruebas Unitarias</a></li>" >> public/index.html
-          echo "</ul></body></html>" >> public/index.html
+          cp -r qa-dashboard-template/* public/ || echo "Warning: qa-dashboard-template not found, using generic index"
+          # Agregamos enlaces a los reportes reales al final del body si existen
+          sed -i 's/<\/body>/<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"><h3 class="text-xl font-bold text-white mb-2">Reportes Detallados HTML<\/h3><ul class="list-disc list-inside text-blue-400"><li><a href="coverage\/index.html" class="hover:underline">Cobertura (Vitest)<\/a><\/li><li><a href="bdd\/index.html" class="hover:underline">BDD (Playwright)<\/a><\/li><li><a href="mutation\/index.html" class="hover:underline">Mutación (Stryker)<\/a><\/li><li><a href="pytest\/index.html" class="hover:underline">Unitarias<\/a><\/li><\/ul><\/div><\/body>/' public/index.html || true
           
       - name: Setup Pages
         uses: actions/configure-pages@v4

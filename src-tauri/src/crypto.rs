@@ -47,3 +47,35 @@ pub fn decrypt_password(encrypted: &str) -> Result<String, String> {
 
     String::from_utf8(decrypted).map_err(|e| format!("UTF8 error: {:?}", e))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encrypt_decrypt_success() {
+        let original_password = "my_super_secret_password_123!";
+        let encrypted = encrypt_password(original_password).unwrap();
+        
+        // Ensure encryption changes the text
+        assert_ne!(original_password, encrypted);
+        
+        let decrypted = decrypt_password(&encrypted).unwrap();
+        assert_eq!(original_password, decrypted);
+    }
+
+    #[test]
+    fn test_decrypt_invalid_base64() {
+        let result = decrypt_password("invalid_base64_!@#");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_decrypt_too_short() {
+        // Base64 encode something shorter than 12 bytes
+        let short_data = general_purpose::STANDARD.encode(b"short");
+        let result = decrypt_password(&short_data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Invalid ciphertext length");
+    }
+}

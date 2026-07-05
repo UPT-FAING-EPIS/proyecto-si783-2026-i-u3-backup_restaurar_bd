@@ -1,0 +1,31 @@
+{
+    "unit": {
+        "total": 52,
+        "passed": 50,
+        "failed": 2,
+        "recent_tests": [
+            { "name": "test_create_backup", "duration": 0.32, "status": "passed" },
+            { "name": "test_restore_database", "duration": 0.45, "status": "passed" },
+            { "name": "test_invalid_credentials", "duration": 0.05, "status": "passed" },
+            { "name": "test_network_failure_handling", "duration": 2.10, "status": "failed" }
+        ]
+    },
+    "coverage": {
+        "percentage": 92.5
+    },
+    "bdd": {
+        "total": 8,
+        "passed": 7,
+        "failed": 1,
+        "features": [
+            { "name": "Database Backup", "scenario": "User requests a full backup", "steps": 3, "status": "passed" },
+            { "name": "Database Restore", "scenario": "User restores from valid file", "steps": 4, "status": "passed" },
+            { "name": "Database Restore", "scenario": "User restores from corrupted file", "steps": 3, "status": "failed" }
+        ]
+    },
+    "mutation": {
+        "total": 85,
+        "killed": 79,
+        "survived": 6
+    }
+}
