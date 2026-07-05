@@ -61,3 +61,43 @@ pub fn init_db(app_dir: &PathBuf) -> Result<Connection> {
 
     Ok(conn)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn test_init_db_creates_tables() {
+        let temp_dir = env::temp_dir().join("safebridge_test_db");
+        let _ = fs::remove_dir_all(&temp_dir); // Ensure clean state
+        
+        let conn = init_db(&temp_dir).expect("Failed to init DB");
+        
+        // Verify connections table exists
+        let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='connections'").unwrap();
+        let exists = stmt.exists([]).unwrap();
+        assert!(exists, "Table 'connections' should exist");
+        
+        // Verify backup_logs table exists
+        let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='backup_logs'").unwrap();
+        let exists = stmt.exists([]).unwrap();
+        assert!(exists, "Table 'backup_logs' should exist");
+        
+        // Verify use_ssl column exists in connections (Migration check)
+        let mut stmt = conn.prepare("PRAGMA table_info(connections)").unwrap();
+        let mut has_use_ssl = false;
+        let mut rows = stmt.query([]).unwrap();
+        while let Some(row) = rows.next().unwrap() {
+            let col_name: String = row.get(1).unwrap();
+            if col_name == "use_ssl" {
+                has_use_ssl = true;
+                break;
+            }
+        }
+        assert!(has_use_ssl, "Column 'use_ssl' should exist in 'connections' table");
+        
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+}

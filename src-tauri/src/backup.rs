@@ -617,3 +617,28 @@ fn calculate_hash_and_size(path: &PathBuf) -> Result<(u64, String), String> {
 
     Ok((size, hash_hex))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_calculate_hash_and_size() {
+        // Create a temporary file with known content
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        let content = b"hello world backup test";
+        temp_file.write_all(content).expect("Failed to write to temp file");
+        
+        let path = temp_file.path().to_path_buf();
+        
+        let (size, hash) = calculate_hash_and_size(&path).expect("Failed to calculate hash and size");
+        
+        assert_eq!(size, content.len() as u64);
+        
+        // Expected SHA-256 for "hello world backup test"
+        let expected_hash = "1bc521d965ba94e7dfc9cd3be5a570c9ebba50567f8c057692be2c19e59dcfb1";
+        assert_eq!(hash, expected_hash);
+    }
+}
