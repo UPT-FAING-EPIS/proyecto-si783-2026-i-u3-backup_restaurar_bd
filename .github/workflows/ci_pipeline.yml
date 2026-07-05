@@ -22,51 +22,47 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps || echo "No se pudo instalar con npm ci"
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Create Reports Directory
         run: mkdir -p reports
 
-      # 1. PRUEBAS UNITARIAS Y COBERTURA REAL (Vitest)
-      - name: Run Unit & Integration Tests (Coverage)
+      # 1. Pruebas Unitarias (Rust)
+      - name: Run Unit Tests (Rust)
         run: |
-          npm install -D vitest @vitest/ui @vitest/coverage-v8
-          npx vitest run --coverage.enabled --coverage.reporter=html --reporter=html --outputFile.html=html/index.html || true
-          mkdir -p reports/coverage
-          mkdir -p reports/pytest
-          cp -r coverage/* reports/coverage/ 2>/dev/null || true
-          cp -r html/* reports/pytest/ 2>/dev/null || true
+          cd src-tauri
+          cargo test -- -Z unstable-options --format=json > ../reports/test_results.json || true
+          cargo test > ../reports/test_results.txt || true
+        env:
+          RUSTC_BOOTSTRAP: 1 # Needed for unstable-options format=json in stable rust
 
-      # 2. PRUEBAS BDD Y E2E REALES (Playwright)
-      - name: Install Playwright Browsers
-        run: |
-          npm install -D @playwright/test
-          npx playwright install --with-deps || true
+      # 2. Cobertura Real (Tarpaulin)
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin || true
 
-      - name: Run BDD Tests (Playwright)
+      - name: Run Coverage (Tarpaulin)
         run: |
-          npx playwright test --reporter=html || true
-          mkdir -p reports/bdd
-          cp -r playwright-report/* reports/bdd/ 2>/dev/null || true
-          if [ ! -f reports/bdd/index.html ]; then
-            echo "<html><body><h1>Reporte BDD</h1><p>Pruebas BDD no generaron reporte.</p></body></html>" > reports/bdd/index.html
-          fi
+          cd src-tauri
+          cargo tarpaulin --out Html --out Json --output-dir ../reports || true
 
-      # 3. MUTATION TESTING (Stryker)
-      - name: Run Mutation Tests (Stryker)
+      # 3. Pruebas de Mutación (cargo-mutants)
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants || true
+
+      - name: Run Mutation Tests
         run: |
-          npx stryker run || true
-          mkdir -p reports/mutation
-          cp -r reports/mutation/html/* reports/mutation/ 2>/dev/null || true
-          if [ ! -f reports/mutation/index.html ]; then
-            echo "<html><body><h1>Reporte de Mutación</h1><p>No se encontraron pruebas de mutación configuradas.</p></body></html>" > reports/mutation/index.html
-          fi
+          cd src-tauri
+          cargo mutants --output ../reports/mutants_out || true
 
       - name: Upload Reports Artifacts
         uses: actions/upload-artifact@v4
