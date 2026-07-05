@@ -89,11 +89,12 @@ jobs:
           
       - name: Create index.html for Pages
         run: |
+          mkdir -p public
           # Generate real data json
           cd docs/qa-dashboard && node generate_data.js && cd ../..
-          cp -r docs/qa-dashboard/* public/ || echo "Warning: docs/qa-dashboard not found, using generic index"
-          # Agregamos enlaces a los reportes reales al final del body si existen
-          sed -i 's/<\/body>/<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"><h3 class="text-xl font-bold text-white mb-2">Reportes Detallados HTML<\/h3><ul class="list-disc list-inside text-blue-400"><li><a href="coverage\/index.html" class="hover:underline">Cobertura (Vitest)<\/a><\/li><li><a href="bdd\/index.html" class="hover:underline">BDD (Playwright)<\/a><\/li><li><a href="mutation\/index.html" class="hover:underline">Mutación (Stryker)<\/a><\/li><li><a href="pytest\/index.html" class="hover:underline">Unitarias<\/a><\/li><\/ul><\/div><\/body>/' public/index.html || true
+          cp -r docs/qa-dashboard/* public/ || echo "Warning: docs/qa-dashboard not found"
+          # Agregamos enlaces a los reportes de Rust al final del body
+          sed -i 's/<\/body>/<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4"><h3 class="text-xl font-bold text-white mb-2">Reportes Detallados HTML<\/h3><ul class="list-disc list-inside text-blue-400"><li><a href="tarpaulin-report.html" class="hover:underline">Cobertura de Código (Tarpaulin)<\/a><\/li><li><a href="mutants_out\/index.html" class="hover:underline">Reporte de Mutación (cargo-mutants)<\/a><\/li><li><a href="test_results.txt" class="hover:underline">Resultados Unitarios (Logs)<\/a><\/li><\/ul><\/div><\/body>/' public/index.html || true
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
