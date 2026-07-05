@@ -36,20 +36,22 @@ jobs:
       # 1. PRUEBAS UNITARIAS, INTEGRACIÓN Y COBERTURA (Vitest simulando Pytest)
       - name: Run Unit & Integration Tests (Coverage)
         run: |
-          npm install -D @vitest/coverage-v8
-          npx vitest run --coverage.enabled --coverage.reporter=html --coverage.reportsDirectory=coverage || true
+          npm install -D vitest @vitest/ui @vitest/coverage-v8
+          npx vitest run --coverage.enabled --coverage.reporter=html --reporter=html --outputFile.html=html/index.html || true
           mkdir -p reports/coverage
           mkdir -p reports/pytest
           cp -r coverage/* reports/coverage/ 2>/dev/null || true
-          echo "<html><body><h1>Reporte de Pruebas Unitarias</h1><p>Pruebas ejecutadas correctamente.</p></body></html>" > reports/pytest/index.html
+          cp -r html/* reports/pytest/ 2>/dev/null || true
 
       # 2. PRUEBAS BDD Y E2E (Playwright simulando Behave)
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps || true
+        run: |
+          npm install -D @playwright/test
+          npx playwright install --with-deps || true
 
       - name: Run BDD Tests (Playwright)
         run: |
-          npx playwright test || true
+          npx playwright test --reporter=html || true
           mkdir -p reports/bdd
           cp -r playwright-report/* reports/bdd/ 2>/dev/null || true
           if [ ! -f reports/bdd/index.html ]; then
