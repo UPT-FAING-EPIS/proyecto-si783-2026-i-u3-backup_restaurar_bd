@@ -38,27 +38,26 @@ jobs:
         run: mkdir -p reports
 
       # 1. Pruebas Unitarias (Rust)
+      - name: Install cargo tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin,cargo-mutants
+
       - name: Run Unit Tests (Rust)
         run: |
           cd src-tauri
-          cargo test -- -Z unstable-options --format=json > ../reports/test_results.json || true
-          cargo test > ../reports/test_results.txt || true
+          cargo test -- --format=json > ../reports/test_results.json 2>&1 || true
+          cargo test > ../reports/test_results.txt 2>&1 || true
         env:
           RUSTC_BOOTSTRAP: 1 # Needed for unstable-options format=json in stable rust
 
       # 2. Cobertura Real (Tarpaulin)
-      - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin || true
-
       - name: Run Coverage (Tarpaulin)
         run: |
           cd src-tauri
           cargo tarpaulin --out Html --out Json --output-dir ../reports || true
 
       # 3. Pruebas de Mutación (cargo-mutants)
-      - name: Install cargo-mutants
-        run: cargo install cargo-mutants || true
-
       - name: Run Mutation Tests
         run: |
           cd src-tauri
