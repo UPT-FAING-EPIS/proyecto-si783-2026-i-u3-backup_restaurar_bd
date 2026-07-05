@@ -36,7 +36,8 @@ jobs:
       # 1. PRUEBAS UNITARIAS, INTEGRACIÓN Y COBERTURA (Vitest simulando Pytest)
       - name: Run Unit & Integration Tests (Coverage)
         run: |
-          npx vitest run --coverage --reporter=junit --outputFile=vitest-report.xml || true
+          npm install -D @vitest/coverage-v8
+          npx vitest run --coverage.enabled --coverage.reporter=html --coverage.reportsDirectory=coverage || true
           mkdir -p reports/coverage
           mkdir -p reports/pytest
           cp -r coverage/* reports/coverage/ 2>/dev/null || true
